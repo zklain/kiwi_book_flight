@@ -22,56 +22,71 @@ def create_dateTo(date):
     new_date += date_split[2]
     return new_date
     
+def check_flight(booking_token, bags):
+    # try:
+    check_flight_request = requests.get(
+        'https://booking-api.skypicker.com/api/v0.1/check_flights?v=2&booking_token={}&bnum={}&pnum=1&affily=picky_cz'.format(booking_token, bags)
+        )
+    check_flight_request.raise_for_status()
+    print(json.dumps(check_flight_request.json(), indent=2))
+    # except requests.exceptions.RequestException as err:
+    #     print(err)
+    #     sys.exit(0)
 
-def book_flight(args):
-    date_from = convert_date_format(args.date)
+
+def find_flight(fly_from, fly_to, date):
+    """
+    Finds flight with given arguments.
+
+    fly_from: start arfield IATA code.
+    fly_to: destination airfiled IATA code.
+    return: flights booking_ticket if flight was found
+    """
+    date_from = convert_date_format(date)
     date_to = create_dateTo(date_from)
     # TOOD: ONE WAY / RETURN
-    get_r_string = 'https://api.skypicker.com/flights?flyFrom={}&to={}&dateFrom={}&dateTo={}&passengers=1&partner=picky&typeFlight=oneWay&sort=price'.format(args._from, args.to, date_from, date_to)
+    get_r_string = 'https://api.skypicker.com/flights?flyFrom={}&to={}&dateFrom={}&dateTo={}&passengers=1&partner=picky&typeFlight=oneWay&sort=price'.format(
+        fly_from, fly_to, date_from, date_to)
     print(get_r_string)
-    
-    # TODO: try as payload for request
 
+    r = requests.get(get_r_string)
+    r.raise_for_status()
+    cheapest = r.json()['data'][0]
+    booking_token = cheapest['booking_token']
+    return booking_token
+
+
+def book_flight(args):
+    """
+    Books flight
+    """
     try:
-        # TODO: use special api to book
-        r = requests.get(get_r_string)
-        r.raise_for_status()
-        print(r.status_code)
-        cheapest = r.json()['data'][0]
-        booking_token = cheapest['booking_token']   
-        deep_link = cheapest['deep_link']
-        
-        # print(booking_token)
-        # print('Cheapest from BTS to A')
-        # print(json.dumps(cheapest, indent=4))
-        # else:
-        #     print('ERROR CONNECTING')
-        #     return 0
-
-        book_data = {'bags' : str(args.bags), 'booking_token' : booking_token}
-            # 'booking_token' : '' + booking_token,
-            # 'bags' : str(args.bags)
-        # }
-        
-        book_request = requests.post(
-            # 'http://128.199.48.38:8080/booking?booking_token={}'.format(booking_token))
-            'http://128.199.48.38:8080/booking?bags=2')
+        booking_token = find_flight(args._from, args.to, args.date) # find flight, get booking token
+        check_flight(booking_token, args.bags)  # check flight using retrieved booking_token
+        book_request = requests.post('http://128.199.48.38:8080/booking?token={}&bnum={}'.format(booking_token, args.bags))
         book_request.raise_for_status()
-        # book_request = requests.post(
-        #     'http://128.199.48.38:8080/booking', data=book_data)
         print(book_request.status_code)
-        print(book_request.json())
-        # print(book_request.content)
-
-
-        # print(book_request.status_code)
-
-
+        print(book_request.content)
     except requests.exceptions.RequestException as err:
         print(err)
         sys.exit(0)
 
-    # print(json.dumps(r.json(), indent=4))
+    # book_data = {'bags': str(args.bags), 'booking_token': booking_token}
+        # 'booking_token' : '' + booking_token,
+        # 'bags' : str(args.bags)
+        # }
+
+        # book_request = requests.post(
+        #     # 'http://128.199.48.38:8080/booking?booking_token={}'.format(booking_token))
+        #     'http://128.199.48.38:8080/booking?bags=2')
+        # book_request.raise_for_status()
+        # # book_request = requests.post(
+        # #     'http://128.199.48.38:8080/booking', data=book_data)
+ 
+
+        # print(book_request.content)
+
+        # print(book_request.status_code)
 
 
 def main():
@@ -99,11 +114,11 @@ def main():
 
     args = arg_parser.parse_args()
     # args_list = args.split()
-    print(args._from)
-    print(args.to)
+    # print(args._from)
+    # print(args.to)
 
-    print(args._return)
-    print(args.bags)
+    # print(args._return)
+    # print(args.bags)
 
     book_flight(args)
 
