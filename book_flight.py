@@ -3,7 +3,6 @@ import argparse
 import json
 import requests
 import sys
-# from urllib3 import Request, urlopen
 
 
 def iata_code(code):
@@ -11,6 +10,9 @@ def iata_code(code):
         return code.upper()
     else:
         raise argparse.ArgumentTypeError('Not a correct IATA code!')
+
+def date_type(date):
+    pass
 
 def convert_date_format(date):
     return date.replace('-', '/')
