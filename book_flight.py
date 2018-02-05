@@ -17,14 +17,16 @@ def date_type(date):
     except ValueError:
         raise ValueError('Incorrect date format, should be YYYY-MM-DD')
 
+
 def convert_date_format(date):
+    """
+    Converts datetime date format (yyyy-mm-dd) to date fomrmat used by kiwi api.
+
+    date: date in datetime format.
+    return: string containing date in dd/mm/yyyy format.
+    """
     return str(date.day) + '/' + str(date.month) + '/' + str(date.year)
 
-
-def create_dateTo(date):
-    date_split = date.split('/')
-    date_split[1] = str(int(date_split[1]) + 1)
-    return '/'.join(date_split)
 
 def create_request_url(fly_from, fly_to, date, fly_back, flights_sort):
     """
@@ -50,10 +52,6 @@ def create_request_url(fly_from, fly_to, date, fly_back, flights_sort):
         flights_sort = 'price'
 
     date_from = convert_date_format(date)
-    # date_from = str(date)
-
-    # TODO: date range?
-    # date_to = create_dateTo(date_from)
 
     url = 'https://api.skypicker.com/flights?'
     url += 'flyFrom=' + fly_from
