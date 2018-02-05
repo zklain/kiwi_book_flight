@@ -2,7 +2,7 @@
 import argparse
 import json
 import requests
-import sys
+import datetime
 
 
 def iata_code(code):
@@ -12,10 +12,13 @@ def iata_code(code):
         raise argparse.ArgumentTypeError('Not a correct IATA code!')
 
 def date_type(date):
-    pass
+    try:
+        return datetime.datetime.strptime(date, '%Y-%m-%d')
+    except ValueError:
+        raise ValueError('Incorrect date format, should be YYYY-MM-DD')
 
 def convert_date_format(date):
-    return date.replace('-', '/')
+    return str(date.day) + '/' + str(date.month) + '/' + str(date.year)
 
 
 def create_dateTo(date):
@@ -47,9 +50,10 @@ def create_request_url(fly_from, fly_to, date, fly_back, flights_sort):
         flights_sort = 'price'
 
     date_from = convert_date_format(date)
+    # date_from = str(date)
 
     # TODO: date range?
-    date_to = create_dateTo(date_from)
+    # date_to = create_dateTo(date_from)
 
     url = 'https://api.skypicker.com/flights?'
     url += 'flyFrom=' + fly_from
@@ -112,7 +116,7 @@ def book_flight(fly_from, fly_to, date, fly_back, flights_sort, bags):
             # reservation number
             reservation_code = get_booking_reservation_code(booking_token, bags)
             # return reservation number
-            return 'Succesfully booked a flight. Reservation code: ' + reservation_code
+            return 'Succesfully booked a flight. Reservation code: ' + reservation_code + '\n'
         else:
             print('Can\'t find a flight with given parameters.')
             return 0
@@ -163,7 +167,7 @@ def main():
     """
     arg_parser = argparse.ArgumentParser()
     # required arguments
-    arg_parser.add_argument("--date", '-d', type=str, required=True,\
+    arg_parser.add_argument("--date", '-d', type=date_type, required=True,\
             help='date in YYYY-MM-DD format')
     arg_parser.add_argument('--from', dest='fly_from', type=iata_code, required=True,\
             help='airfield IATA code')  
